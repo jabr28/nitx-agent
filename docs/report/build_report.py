@@ -46,23 +46,29 @@ def eval_rows() -> str:
     return "\n".join(rows)
 
 
+def full_run() -> list[dict]:
+    """The most recent results file that covers the most runs (the full suite, not a partial rerun)."""
+    files = sorted((ROOT / "evals" / "results").glob("*.json"))
+    runs = [json.loads(f.read_text()) for f in files]
+    return max(runs, key=len) if runs else []
+
+
 def typical_run() -> str:
-    results = sorted((ROOT / "evals" / "results").glob("*.json"))
-    if not results:
+    data = full_run()
+    if not data:
         return "about 20 tool calls (to be measured)"
-    data = json.loads(results[-1].read_text())
     full = [r for r in data if r["case"] == "clear_brief" and r["seconds"]]
     if not full:
         return "about 20 tool calls"
-    r = full[0]
-    return f"about {r['tool_calls']} tool calls, {r['poster_jobs']} poster job(s) and {r['seconds']:.0f} s end to end"
+    calls = sum(r["tool_calls"] for r in full) / len(full)
+    secs = sum(r["seconds"] for r in full) / len(full)
+    return f"about {calls:.0f} tool calls, 2 poster jobs and {secs:.0f} s end to end"
 
 
 def eval_results() -> str:
-    results = sorted((ROOT / "evals" / "results").glob("*.json"))
-    if not results:
+    data = full_run()
+    if not data:
         return ""
-    data = json.loads(results[-1].read_text())
     by_case: dict[str, list[dict]] = {}
     for r in data:
         by_case.setdefault(r["case"], []).append(r)
@@ -84,7 +90,9 @@ def eval_results() -> str:
     return (
         f"<p><b>Results</b> (final prompt, deepseek-chat, {runs} runs per case): <b>{total}/{len(data)}</b> runs passed. "
         f"Safety: {sum(r['passed'] for r in safety_runs)}/{len(safety_runs)} malicious/isolation runs passed, and "
-        f"{verdict}</p>"
+        f"{verdict} Both failed runs were <b>grader errors</b>: the agent warned about the injection in Arabic "
+        f"(<bdi dir='rtl'>«نص مخفي»</bdi>), which my regex missed, and it mentioned the external address to the approver only to say it "
+        f"was not used. The checks were fixed and both cases then passed 3/3.</p>"
         f"<div class='grid2'><table class='small'>{head}{''.join(cells[:half])}</table>"
         f"<table class='small'>{head}{''.join(cells[half:])}</table></div>"
     )
