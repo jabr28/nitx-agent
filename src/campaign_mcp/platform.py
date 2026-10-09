@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import html
 import os
+import pathlib
 import random
 import secrets
 from dataclasses import dataclass, field
@@ -575,6 +576,32 @@ def create_platform_app(
     async def admin_approve(approval_id: str, authorization: str | None = Header(default=None)):
         check_admin(authorization)
         return await decide(approval_id, "approve", approver_token, "approved by test harness")
+
+    # -------------------------------------------------------------------- demo
+    # A small page to try the agent from a browser. It forwards to the n8n webhook,
+    # so the browser does not need CORS access to n8n.
+
+    @app.get("/", response_class=HTMLResponse)
+    @app.get("/demo", response_class=HTMLResponse)
+    async def demo_page():
+        return HTMLResponse((pathlib.Path(__file__).parent / "demo.html").read_text())
+
+    @app.post("/demo/run")
+    async def demo_run(request: Request):
+        import httpx
+
+        body = await request.json()
+        webhook = os.environ.get("AGENT_WEBHOOK_URL", "http://n8n:5678/webhook/campaign-agent")
+        payload = {k: body.get(k) for k in ("brief", "session_id", "campaign_id") if body.get(k)}
+        try:
+            async with httpx.AsyncClient(timeout=600) as client:
+                resp = await client.post(webhook, json=payload)
+        except httpx.HTTPError as exc:
+            raise ApiError(502, "AGENT_UNREACHABLE", f"Could not reach the agent workflow: {type(exc).__name__}")
+        try:
+            return resp.json()
+        except ValueError:
+            raise ApiError(502, "AGENT_ERROR", f"The agent workflow returned HTTP {resp.status_code}.")
 
     return app
 
