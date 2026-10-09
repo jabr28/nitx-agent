@@ -12,12 +12,16 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=2.3.0",
     "pydantic>=2.14.0",
+    "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
 ]
 
 [build-system]
 requires = ["uv_build>=0.12.7,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = ["poster_mcp", "campaign_mcp"]
 
 [dependency-groups]
 dev = [
@@ -27,6 +31,8 @@ dev = [
 [project.scripts]
 poster-mcp = "poster_mcp.server:main"
 poster-mock-backend = "poster_mcp.backend:main"
+campaign-mcp = "campaign_mcp.server:main"
+nitx-mock-platform = "campaign_mcp.platform:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -217,6 +217,17 @@ def create_app(config: MockConfig | None = None, clock: Callable[[], float] = ti
     app = FastAPI(title="Mock Poster Service", version="1.0")
     app.state.config = config
     app.state.jobs = jobs
+    app.state.clock = clock
+    # tenant -> {"poster_fail_next": n}; set by the platform's admin API for evals.
+    app.state.faults = {}
+
+    def reset() -> None:
+        jobs.clear()
+        idempotency.clear()
+        counter["created"] = 0
+        app.state.faults.clear()
+
+    app.state.reset_posters = reset
 
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
@@ -251,6 +262,9 @@ def create_app(config: MockConfig | None = None, clock: Callable[[], float] = ti
         if job is None or job.tenant != tenant:
             raise ApiError(404, "JOB_NOT_FOUND", f"No job with id {job_id!r}.")
         return job
+
+    app.state.tenant_for = tenant_for
+    app.state.ApiError = ApiError
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -314,7 +328,10 @@ def create_app(config: MockConfig | None = None, clock: Callable[[], float] = ti
             )
 
         counter["created"] += 1
-        if counter["created"] <= config.fail_first_n:
+        tenant_faults = app.state.faults.get(tenant, {})
+        if counter["created"] <= config.fail_first_n or tenant_faults.get("poster_fail_next", 0) > 0:
+            if tenant_faults.get("poster_fail_next", 0) > 0:
+                tenant_faults["poster_fail_next"] -= 1
             failure = FAILURE_REASONS[0]  # forced failures are always retryable
         elif rng.random() < config.fail_rate:
             failure = rng.choice(FAILURE_REASONS)
