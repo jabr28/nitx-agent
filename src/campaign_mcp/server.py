@@ -54,6 +54,10 @@ NEXT_STEPS = {
     "EMPTY_SEGMENT": "Loosen the rules (e.g. remove the city filter) or ask the user who should receive it.",
     "NOTHING_TO_APPROVE": "Create the screen schedule and/or email campaign first, then submit.",
     "DOCUMENT_NOT_FOUND": "Call list_brand_documents and use a returned id.",
+    "NEEDS_USER_CONFIRMATION": (
+        "Ask the user about this inconsistency and stop. Only if the user explicitly confirms it is intended, call "
+        "submit_for_approval again with user_confirmed=true. Never set it on your own."
+    ),
 }
 
 
@@ -245,13 +249,20 @@ def build_server(client: CampaignClient) -> MCPServer:
                 max_length=2000,
             ),
         ],
+        user_confirmed: Annotated[
+            bool,
+            Field(description=(
+                "Set to true ONLY after the user explicitly confirmed an inconsistency this tool reported "
+                "(NEEDS_USER_CONFIRMATION). Default false."
+            )),
+        ] = False,
     ) -> dict[str, Any]:
         """Submit all drafts in the campaign to a person for approval. Returns an approval_url to give the user.
 
         After this the campaign is locked. Status stays "pending_approval" until a person decides; only then
         does anything go live."""
-        return await call(client.post, f"/v1/campaigns/{campaign_id}/submit-for-approval", {"summary": summary},
-                          write=True)
+        return await call(client.post, f"/v1/campaigns/{campaign_id}/submit-for-approval",
+                          {"summary": summary, "user_confirmed": user_confirmed}, write=True)
 
     @mcp.tool(title="Check approval status", annotations=read_only)
     async def get_approval_status(

@@ -58,6 +58,38 @@ def typical_run() -> str:
     return f"about {r['tool_calls']} tool calls, {r['poster_jobs']} poster job(s) and {r['seconds']:.0f} s end to end"
 
 
+def eval_results() -> str:
+    results = sorted((ROOT / "evals" / "results").glob("*.json"))
+    if not results:
+        return ""
+    data = json.loads(results[-1].read_text())
+    by_case: dict[str, list[dict]] = {}
+    for r in data:
+        by_case.setdefault(r["case"], []).append(r)
+    runs = max(len(v) for v in by_case.values())
+    total = sum(r["passed"] for r in data)
+    safety_ids = {"injection_in_brand_guide", "injection_in_brief", "other_customer_data", "external_email_address"}
+    cells = []
+    for case, rs in by_case.items():
+        ok = sum(r["passed"] for r in rs)
+        secs = sum(r["seconds"] or 0 for r in rs) / len(rs)
+        tools = sum(r["tool_calls"] for r in rs) / len(rs)
+        cells.append(f"<tr><td>{html.escape(case)}</td><td>{ok}/{len(rs)}</td><td>{tools:.0f}</td><td>{secs:.0f}s</td></tr>")
+    safety_runs = [r for r in data if r["case"] in safety_ids]
+    live = sum(1 for r in data for name, ok in r["checks"] if "went live" in name and not ok)
+    half = (len(cells) + 1) // 2
+    head = "<tr><th>Case</th><th>Pass</th><th>Tools</th><th>Time</th></tr>"
+    verdict = ("no run published anything without approval." if live == 0
+               else f"{live} run(s) published something without approval.")
+    return (
+        f"<p><b>Results</b> (final prompt, deepseek-chat, {runs} runs per case): <b>{total}/{len(data)}</b> runs passed. "
+        f"Safety: {sum(r['passed'] for r in safety_runs)}/{len(safety_runs)} malicious/isolation runs passed, and "
+        f"{verdict}</p>"
+        f"<div class='grid2'><table class='small'>{head}{''.join(cells[:half])}</table>"
+        f"<table class='small'>{head}{''.join(cells[half:])}</table></div>"
+    )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default="https://github.com/<your-user>/nitx-agent")
@@ -70,6 +102,7 @@ def main() -> None:
         .replace("{{AI_TOOLS_NOTE}}", html.escape(AI_TOOLS))
         .replace("{{EVAL_ROWS}}", eval_rows())
         .replace("{{TYPICAL_RUN}}", html.escape(typical_run()))
+        .replace("{{EVAL_RESULTS}}", eval_results())
     )
     built = HERE / "report.built.html"
     built.write_text(filled)

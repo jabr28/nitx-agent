@@ -214,6 +214,23 @@ def create_platform_app(
             raise ApiError(422, "INVALID_FIELD", f"{name} is longer than {max_len} characters.", field=name)
         return value
 
+    def consistency_warnings(tenant: str, camp: dict[str, Any]) -> list[str]:
+        """Deterministic checks that don't trust the agent to notice a contradiction."""
+        objs = [td(tenant).objects[i] for i in camp["items"]]
+        schedules = [o for o in objs if o["kind"] == "screen_schedule"]
+        emails = [o for o in objs if o["kind"] == "email_campaign"]
+        out = []
+        if schedules and emails:
+            last_day = max(s["end_date"] for s in schedules)
+            first_day = min(s["start_date"] for s in schedules)
+            for e in emails:
+                day = e["send_at"][:10]
+                if day > last_day:
+                    out.append(f"The email is sent on {day}, after the screen run ends on {last_day}.")
+                elif (date.fromisoformat(first_day) - date.fromisoformat(day)).days > 7:
+                    out.append(f"The email is sent on {day}, more than a week before the screen run starts on {first_day}.")
+        return out
+
     def take_fault(tenant: str, name: str) -> bool:
         faults = app.state.faults.get(tenant, {})
         if faults.get(name, 0) > 0:
@@ -454,12 +471,21 @@ def create_platform_app(
         if not publishable:
             raise ApiError(422, "NOTHING_TO_APPROVE",
                            "The campaign has no screen schedule or email campaign yet; create them first.")
+        warnings = consistency_warnings(tenant, camp)
+        if warnings and body.get("user_confirmed") is not True:
+            audit(tenant, campaign_id, "agent", "submit_for_approval", result="needs_user_confirmation")
+            raise ApiError(
+                409, "NEEDS_USER_CONFIRMATION",
+                "The campaign looks inconsistent: " + " ".join(warnings) + " Nothing was submitted.",
+                warnings=warnings,
+            )
         approval = {
             "approval_id": new_id("apr"),
             "campaign_id": campaign_id,
             "status": "pending",
             "summary": require(body, "summary", str, max_len=2000),
             "items": publishable,
+            "warnings": warnings,
             "submitted_at": now_local().isoformat(timespec="seconds"),
         }
         approval["approval_url"] = f"{public_url}/approve/{approval['approval_id']}"
@@ -574,6 +600,7 @@ def _render_approval(appr: dict[str, Any], view: dict[str, Any]) -> str:
 <style>body{{font:15px system-ui;max-width:720px;margin:40px auto;padding:0 16px}}pre{{white-space:pre-wrap;background:#f5f5f5;padding:8px}}</style>
 <h1>Approve campaign {e(view['name'])}</h1>
 <p>Status: <b>{e(appr['status'])}</b></p>
+{''.join(f"<p style='color:#a4470a'><b>⚠ {e(w)}</b> (the customer confirmed this)</p>" for w in appr.get('warnings', []))}
 <h3>Agent's summary</h3><pre dir="auto">{e(appr['summary'])}</pre>
 <h3>What goes live if you approve</h3><ul>{''.join(rows)}</ul>
 <form method="post">

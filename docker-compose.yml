@@ -7,6 +7,8 @@ x-mcp-common: &mcp
   environment: &mcp-env
     POSTER_API_KEY: ${NITX_DEMO_API_KEY:?run ./scripts/init-env.sh first}
     POSTER_API_BASE_URL: http://platform:8080
+    # 40/hour is the production-style default; the full eval suite (42 runs) needs more.
+    POSTER_MAX_IMAGES_PER_HOUR: ${POSTER_MAX_IMAGES_PER_HOUR:-300}
     LOG_LEVEL: INFO
 
 services:

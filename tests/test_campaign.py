@@ -194,3 +194,22 @@ async def test_read_tools_with_filters_work():
     assert [s["id"] for s in screens.structured_content["screens"]] == ["scr_jed_tahlia_dt"]
     assert media.structured_content["assets"] and all(a["type"] == "background" for a in media.structured_content["assets"])
     assert len(docs.structured_content["documents"]) == 2
+
+
+async def test_email_after_the_screen_run_needs_user_confirmation():
+    async with platform() as (p, c, raw, _):
+        cid = await new_campaign(raw)
+        made = await build_full_campaign(p, c, cid)
+        # Move the email to the Sunday after the Thu-Sat screen run.
+        sunday = (next_thursday() + timedelta(days=3)).strftime("%Y-%m-%dT09:00")
+        email2 = await c.call_tool("schedule_email_campaign", {
+            "campaign_id": cid, "design_id": made["email"]["design_id"], "segment_id": made["segment"]["id"],
+            "send_at": sunday,
+        })
+        assert not email2.is_error
+        r = await c.call_tool("submit_for_approval", {"campaign_id": cid, "summary": "s"})
+        assert r.is_error and "NEEDS_USER_CONFIRMATION" in text(r) and "after the screen run ends" in text(r)
+        state = (await c.call_tool("get_campaign", {"campaign_id": cid})).structured_content
+        assert state["approval"] is None
+        ok = await c.call_tool("submit_for_approval", {"campaign_id": cid, "summary": "s", "user_confirmed": True})
+        assert not ok.is_error and ok.structured_content["warnings"]
