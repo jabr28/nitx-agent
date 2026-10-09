@@ -183,3 +183,14 @@ async def test_dates_in_the_past_are_rejected_with_a_hint():
         })
     assert r.is_error and "DATE_IN_PAST" in text(r) and "today's date" in text(r)
 
+
+
+async def test_read_tools_with_filters_work():
+    async with platform() as (_, c, _, _):
+        screens = (await c.call_tool("list_screens", {"city": "Jeddah", "location_type": "drive_thru"}))
+        media = (await c.call_tool("list_media_assets", {"type": "background"}))
+        docs = (await c.call_tool("list_brand_documents", {}))
+    assert not screens.is_error, text(screens)
+    assert [s["id"] for s in screens.structured_content["screens"]] == ["scr_jed_tahlia_dt"]
+    assert media.structured_content["assets"] and all(a["type"] == "background" for a in media.structured_content["assets"])
+    assert len(docs.structured_content["documents"]) == 2

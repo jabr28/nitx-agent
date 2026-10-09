@@ -89,9 +89,9 @@ def build_server(client: CampaignClient) -> MCPServer:
     read_only = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
     draft = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False)
 
-    async def call(fn, *args, write: bool = False):
+    async def call(fn, *args, write: bool = False, **kwargs):
         try:
-            return await fn(*args)
+            return await fn(*args, **kwargs)
         except ServiceError as err:
             raise _explain(err, write=write) from None
 
