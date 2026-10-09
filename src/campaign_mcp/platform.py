@@ -30,11 +30,12 @@ from zoneinfo import ZoneInfo
 from fastapi import FastAPI, Form, Header, Request
 from fastapi.responses import HTMLResponse
 
-from poster_mcp.backend import MockConfig, create_app as create_poster_app
+from poster_mcp.backend import CDN_BASE, MockConfig, create_app as create_poster_app
 
 TZ = ZoneInfo("Asia/Riyadh")
+RESOLUTIONS_PX = {"1k": 1024, "2k": 2048}
 DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-CDN_PREFIX = "https://cdn.mock-nitx.local/"
+CDN_PREFIX = CDN_BASE + "/"
 
 SCREENS = {
     "demo": [
@@ -576,6 +577,36 @@ def create_platform_app(
     async def admin_approve(approval_id: str, authorization: str | None = Header(default=None)):
         check_admin(authorization)
         return await decide(approval_id, "approve", approver_token, "approved by test harness")
+
+    @app.get("/cdn/{tenant}/{job_id}/{n}.png")
+    async def poster_placeholder(tenant: str, job_id: str, n: int):
+        """Stand-in for a generated poster: a brand-coloured card showing the prompt."""
+        from fastapi.responses import Response
+
+        job = app.state.jobs.get(job_id)
+        if job is None or job.tenant != tenant or job.status(clock()) != "completed":
+            raise ApiError(404, "IMAGE_NOT_FOUND", "No such image.")
+        size = RESOLUTIONS_PX.get(job.request["resolution"], 1024)
+        words = html.escape(job.request["prompt"]).split()
+        lines, line = [], ""
+        for w in words:
+            if len(line) + len(w) > 46:
+                lines.append(line)
+                line = ""
+            line = f"{line} {w}".strip()
+        lines.append(line)
+        text = "".join(
+            f'<text x="50%" y="{430 + i * 34}" text-anchor="middle" font-size="24" fill="#F4EBDD">{l}</text>'
+            for i, l in enumerate(lines[:12])
+        )
+        svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" fill="#1F4D3A"/><rect x="40" y="40" width="944" height="944" fill="none" stroke="#C9A227" stroke-width="6"/>
+<text x="50%" y="200" text-anchor="middle" font-size="64" font-weight="700" fill="#C9A227" font-family="Noto Naskh Arabic, serif">قهوة الصباح</text>
+<text x="50%" y="280" text-anchor="middle" font-size="30" fill="#F4EBDD">MOCK POSTER · {html.escape(job_id)} · variation {n}</text>
+<text x="50%" y="360" text-anchor="middle" font-size="22" fill="#C9A227">prompt sent to the image model:</text>
+{text}
+<text x="50%" y="960" text-anchor="middle" font-size="20" fill="#F4EBDD">placeholder — no real image model in this assessment</text></svg>"""
+        return Response(svg, media_type="image/svg+xml")
 
     # -------------------------------------------------------------------- demo
     # A small page to try the agent from a browser. It forwards to the n8n webhook,

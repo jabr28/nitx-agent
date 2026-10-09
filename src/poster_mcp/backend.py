@@ -31,6 +31,8 @@ from fastapi.responses import JSONResponse
 PROMPT_MAX_CHARS = 500
 IMAGE_COUNT_MIN, IMAGE_COUNT_MAX = 1, 4
 RESOLUTIONS = {"1k": 1024, "2k": 2048}
+# Where generated images "live". The platform can serve placeholders here for demos.
+CDN_BASE = os.environ.get("MOCK_CDN_BASE", "https://cdn.mock-nitx.local").rstrip("/")
 IDEMPOTENCY_TTL_SECONDS = 24 * 3600
 
 TEMPLATES: list[dict[str, str]] = [
@@ -128,7 +130,7 @@ class Job:
             expires = int(time.time()) + 3600
             out["images"] = [
                 {
-                    "url": f"https://cdn.mock-nitx.local/{self.tenant}/{self.id}/{i + 1}.png"
+                    "url": f"{CDN_BASE}/{self.tenant}/{self.id}/{i + 1}.png"
                     f"?expires={expires}&sig={secrets.token_hex(8)}",
                     "width": size,
                     "height": size,
