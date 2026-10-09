@@ -48,7 +48,7 @@ def render_turn(turn: dict, brief: str | None, n: int) -> list[str]:
     for s in turn.get("steps", []):
         tool = (s.get("tool") or "").split("__")[-1]
         args = {k: v for k, v in (s.get("input") or {}).items() if k != "tool"}
-        flag = " ❌" if s.get("is_error") else ""
+        flag = " (error)" if s.get("is_error") else ""
         out.append(f"<details><summary><code>{s['n']:>2}. {tool}</code>{flag}</summary>\n")
         out.append("```json\n" + redact(json.dumps(args, ensure_ascii=False, indent=1)) + "\n```")
         out.append("Result:\n```\n" + redact(short(pretty_observation(s.get("observation", "")), 1500)) + "\n```\n</details>\n")
@@ -78,7 +78,7 @@ def main() -> None:
         case = next(c for c in CASES if c.id == args.case)
         briefs = [case.brief, *case.follow_ups]
         header = [f"Eval case `{args.case}`: **{'PASS' if result['passed'] else 'FAIL'}**", ""]
-        header += [f"- {'✓' if ok else '✗'} {name}" for name, ok in result["checks"]] + [""]
+        header += [f"- [{'x' if ok else ' '}] {name}" for name, ok in result["checks"]] + [""]
     else:
         turns = data if isinstance(data, list) else [data]
         briefs = args.brief

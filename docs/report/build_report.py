@@ -22,9 +22,7 @@ sys.path.insert(0, str(ROOT / "evals"))
 from run_evals import CASES  # noqa: E402
 
 AI_TOOLS = (
-    "Claude Code (Anthropic) as a pair-programmer: scaffolding the code, tests, n8n workflow JSON and Docker setup, "
-    "and editing these documents. I specified the architecture and safety design, reviewed every change, and ran "
-    "and debugged everything locally. DeepSeek (deepseek-chat) is the model inside the agent itself."
+    "Claude Code as a coding assistant for the implementation, tests and drafting the documents. I reviewed and ran everything, and can explain or change any part. DeepSeek (deepseek-chat) is the model inside the agent."
 )
 
 

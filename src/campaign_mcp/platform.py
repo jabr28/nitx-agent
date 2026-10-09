@@ -605,7 +605,7 @@ def create_platform_app(
 <text x="50%" y="280" text-anchor="middle" font-size="30" fill="#F4EBDD">MOCK POSTER · {html.escape(job_id)} · variation {n}</text>
 <text x="50%" y="360" text-anchor="middle" font-size="22" fill="#C9A227">prompt sent to the image model:</text>
 {text}
-<text x="50%" y="960" text-anchor="middle" font-size="20" fill="#F4EBDD">placeholder — no real image model in this assessment</text></svg>"""
+<text x="50%" y="960" text-anchor="middle" font-size="20" fill="#F4EBDD">placeholder - no real image model in this assessment</text></svg>"""
         return Response(svg, media_type="image/svg+xml")
 
     # -------------------------------------------------------------------- demo
@@ -658,7 +658,7 @@ def _render_approval(appr: dict[str, Any], view: dict[str, Any]) -> str:
 <style>body{{font:15px system-ui;max-width:720px;margin:40px auto;padding:0 16px}}pre{{white-space:pre-wrap;background:#f5f5f5;padding:8px}}</style>
 <h1>Approve campaign {e(view['name'])}</h1>
 <p>Status: <b>{e(appr['status'])}</b></p>
-{''.join(f"<p style='color:#a4470a'><b>⚠ {e(w)}</b> (the customer confirmed this)</p>" for w in appr.get('warnings', []))}
+{''.join(f"<p style='color:#a4470a'><b>Warning: {e(w)}</b> (the customer confirmed this)</p>" for w in appr.get('warnings', []))}
 <h3>Agent's summary</h3><pre dir="auto">{e(appr['summary'])}</pre>
 <h3>What goes live if you approve</h3><ul>{''.join(rows)}</ul>
 <form method="post">

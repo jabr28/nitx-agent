@@ -1,4 +1,4 @@
-# Nitx Applied AI Assessment — Poster MCP Server & Campaign Agent
+# Nitx Applied AI Assessment - Poster MCP Server & Campaign Agent
 
 Yousef Gabr's submission for Sections **01** (MCP server), **02** (Campaign Agent), **05** (Evaluation & Safety) and **08** (bonus: agent end to end).
 The written parts (01 answers, 02 design, 05 evaluation & safety) are in **[docs/Nitx-AI-Assessment-Yousef-Gabr.pdf](docs/Nitx-AI-Assessment-Yousef-Gabr.pdf)**.
@@ -21,7 +21,7 @@ The written parts (01 answers, 02 design, 05 evaluation & safety) are in **[docs
 | 05 / 08 Evaluation | [`evals/run_evals.py`](evals/run_evals.py), results in [`evals/results/`](evals/results/) |
 | Transcripts | [`transcripts/`](transcripts/) |
 
-## Quick start — the whole stack
+## Quick start - the whole stack
 
 Requirements: Docker with Compose, plus [uv](https://docs.astral.sh/uv/) for the tests and evals. You also need a DeepSeek API key ([platform.deepseek.com](https://platform.deepseek.com/api_keys)); a full run costs a fraction of a cent.
 
@@ -53,7 +53,7 @@ uv run pytest                          # 35 tests, no Docker or LLM needed
 uv run python evals/run_evals.py       # 14 agent cases against the running stack → PASS/FAIL table
 ```
 
-## Section 01 — Poster MCP server
+## Section 01 - Poster MCP server
 
 The server runs on its own too, without Docker or n8n:
 
@@ -132,7 +132,7 @@ Every successful result carries a **`next_step`** field, and every error states 
 | Limits | hourly budget blocks runaway generation (replay stays free); concurrent-job limit → `RATE_LIMITED` |
 | Mock fidelity | default jobs take 5–20 s; ~10% of 1,000 jobs fail; invalid inputs rejected; requests without a key refused |
 
-## Section 02 / 08 — Campaign Agent
+## Section 02 / 08 - Campaign Agent
 
 **Shape:** a single agent (DeepSeek `deepseek-chat`, ≤40 iterations) wrapped in deterministic n8n steps. The workflow opens the campaign before the agent runs, so every draft is tagged with its id, and it reads and verifies the real state after the agent finishes. The full design is in the PDF.
 
@@ -153,7 +153,7 @@ Every successful result carries a **`next_step`** field, and every error states 
 
 **Rebuilding the workflow:** edit [`n8n/system-prompt.md`](n8n/system-prompt.md) or [`n8n/verify_report.js`](n8n/verify_report.js), then run `uv run python n8n/build_workflow.py && docker compose run --rm n8n-init && docker compose restart n8n`.
 
-## Section 05 / 08 — Evaluation
+## Section 05 / 08 - Evaluation
 
 `uv run python evals/run_evals.py` runs 14 cases (`--only <id>` for one, `--repeat N` to measure flakiness). Before each case it resets the platform and injects faults through an admin API, and it grades the **platform's state** (schedules, statuses, tool arguments), not the agent's prose.
 
@@ -180,4 +180,4 @@ transcripts/         recorded agent runs
 
 ## AI tools used
 
-Claude Code (Anthropic) was my pair-programmer. It scaffolded the code, tests, n8n workflow JSON and Docker setup, and helped edit the documents. I specified the architecture and safety design, reviewed every change, and ran and debugged everything locally. DeepSeek (`deepseek-chat`) is the model inside the agent.
+Claude Code as a coding assistant for the implementation, tests and drafting the documents. I reviewed and ran everything, and can explain or change any part. DeepSeek (deepseek-chat) is the model inside the agent.

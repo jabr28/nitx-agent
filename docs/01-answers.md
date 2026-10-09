@@ -1,4 +1,4 @@
-# Section 01 — Written answers
+# Section 01 - Written answers
 
 **1. Why separate create and status tools?**
 Generation takes 5–20 s and fails about 1 time in 10. A blocking tool hits client timeouts, and a dropped connection loses the result while the job keeps costing money. A job id survives retries and disconnects, so the agent can run jobs in parallel, cancel them, and report progress. `get_job_status(wait_seconds≤30)` keeps the convenience of waiting without those risks.

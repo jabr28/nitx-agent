@@ -292,7 +292,7 @@ def main() -> int:
             return 2
         for case in cases:
             for attempt in range(args.repeat):
-                print(f"▶ {case.id} ({case.category})" + (f" #{attempt + 1}" if args.repeat > 1 else ""), flush=True)
+                print(f"== {case.id} ({case.category})" + (f" #{attempt + 1}" if args.repeat > 1 else ""), flush=True)
                 try:
                     run = run_case(client, case)
                     outcomes = []
@@ -306,9 +306,9 @@ def main() -> int:
                     run, outcomes, error = None, [], f"{type(exc).__name__}: {exc}"
                 passed = error is None and all(ok for _, ok in outcomes)
                 for name, ok in outcomes:
-                    print(f"   {'✓' if ok else '✗'} {name}")
+                    print(f"   {'PASS' if ok else 'FAIL'}  {name}")
                 if error:
-                    print(f"   ✗ run failed: {error}")
+                    print(f"   FAIL  run failed: {error}")
                 tool_steps = run.steps if run else []
                 results.append({
                     "case": case.id, "category": case.category, "passed": passed, "error": error,

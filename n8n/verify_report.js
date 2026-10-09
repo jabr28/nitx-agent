@@ -56,7 +56,7 @@ const verified = ok
       `Posters on screens: ${state.screen_contents.length}`,
       `Screen schedules: ${schedules.length ? schedules.map(fmt).join('; ') : 'none'}`,
       `Email campaigns: ${emails.length ? emails.map((e) => `${e.recipients} recipients at ${e.send_at} [${e.status}]`).join('; ') : 'none'}`,
-      `Approval: ${approval ? `${approval.status} — ${approval.approval_url}` : 'not requested'}`,
+      `Approval: ${approval ? `${approval.status} - ${approval.approval_url}` : 'not requested'}`,
     ].join('\n')
   : 'unavailable';
 
