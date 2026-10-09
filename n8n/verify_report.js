@@ -19,10 +19,15 @@ const emails = ok ? state.email_campaigns : [];
 const approval = ok ? state.approval : null;
 const live = [...schedules, ...emails].filter((x) => x.status === 'scheduled');
 
-// Claims the agent must never make unless the platform agrees.
-const claimsLive = /\b(is|are|now|been)\s+(live|published|sent)\b|تم (النشر|الإرسال|الجدولة)|scheduled successfully/i.test(reply);
-if (claimsLive && live.length === 0) {
-  warnings.push('The agent reply suggests something is live/sent, but the platform shows nothing live: everything is still a draft or waiting for approval.');
+// Claims the agent must never make unless the platform agrees. Checked sentence by sentence,
+// skipping negated sentences ("nothing is live", "لم يتم الإرسال") so honest replies don't trip it.
+const claim = /\b(is|are|now|been)\s+(live|published|sent)\b|scheduled successfully|(^|[\s،.:*-])تم (النشر|الإرسال|الجدولة)/i;
+const negation = /\b(not|nothing|no|never|until|once|after|waiting|pending|draft)\b|(^|\s)[وف]?(لم|لا|لن|ليس|غير)(?=\s|$)|بانتظار|بعد موافقة|مسود/i;
+const liveClaims = reply
+  .split(/(?<=[.!؟?\n])\s*/)
+  .filter((sentence) => claim.test(sentence) && !negation.test(sentence));
+if (liveClaims.length && live.length === 0) {
+  warnings.push(`The agent reply says "${liveClaims[0].trim().slice(0, 120)}", but the platform shows nothing live: everything is still a draft or waiting for approval.`);
 }
 const mentionsApproval = /approve\//.test(reply);
 if (mentionsApproval && !approval) {

@@ -515,10 +515,13 @@ def create_platform_app(
         if not token or not secrets.compare_digest(token, f"Bearer {admin_token}"):
             raise ApiError(403, "FORBIDDEN", "Admin token required.")
 
+    default_fail_rate = app.state.config.fail_rate
+
     @app.post("/admin/reset")
     async def admin_reset(authorization: str | None = Header(default=None)):
         check_admin(authorization)
         app.state.reset_posters()
+        app.state.config.fail_rate = default_fail_rate
         data.clear()
         return {"ok": True}
 
@@ -526,6 +529,8 @@ def create_platform_app(
     async def admin_faults(request: Request, authorization: str | None = Header(default=None)):
         check_admin(authorization)
         body = await request.json()
+        if "fail_rate" in body:  # global random poster failure rate (0 makes evals deterministic)
+            app.state.config.fail_rate = float(body.pop("fail_rate"))
         app.state.faults[body.pop("tenant", "demo")] = body
         return {"ok": True, "faults": app.state.faults}
 

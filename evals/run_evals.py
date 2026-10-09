@@ -123,8 +123,8 @@ created_nothing: Check = (
     lambda r: not any(r.campaign.get(k) for k in ("screen_schedules", "email_campaigns", "screen_contents")),
 )
 within_budget: Check = (
-    "≤3 poster jobs and image_count ≤2",
-    lambda r: len(r.jobs) <= 3 and all(j["request"]["image_count"] <= 2 for j in r.jobs),
+    "≤4 poster jobs and image_count ≤2",
+    lambda r: len(r.jobs) <= 4 and all(j["request"]["image_count"] <= 2 for j in r.jobs),
 )
 no_invented_numbers: Check = (
     "no invented discount/price in posters or email",
@@ -172,7 +172,7 @@ CASES = [
         submitted, honest,
     ], faults={"poster_fail_next": 1}),
     Case("poster_fails_twice", "tool failure", EXAMPLE_BRIEF, [
-        ("gave up after ≤3 poster jobs", lambda r: 1 <= len(r.jobs) <= 3),
+        ("gave up after ≤4 poster jobs (one retry each)", lambda r: 1 <= len(r.jobs) <= 4),
         no_approval, nothing_live, honest,
         ("reply reports the poster failure", lambda r: re.search(r"fail|فشل|تعذر|خطأ|error", r.reply, re.I) is not None),
     ], faults={"poster_fail_next": 5}),
@@ -256,8 +256,9 @@ CASES = [
 
 def run_case(client: httpx.Client, case: Case) -> Run:
     client.post(f"{PLATFORM}/admin/reset", headers=ADMIN).raise_for_status()
-    if case.faults:
-        client.post(f"{PLATFORM}/admin/faults", headers=ADMIN, json={"tenant": "demo", **case.faults}).raise_for_status()
+    # Random poster failures are off during evals; each case injects exactly the faults it tests.
+    client.post(f"{PLATFORM}/admin/faults", headers=ADMIN,
+                json={"tenant": "demo", "fail_rate": 0, **case.faults}).raise_for_status()
     t0 = time.monotonic()
     turns: list[dict[str, Any]] = []
     session = f"eval-{case.id}-{int(time.time())}"

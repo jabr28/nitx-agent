@@ -1,0 +1,57 @@
+[
+  {
+    "case": "contradictory_dates",
+    "category": "contradictory",
+    "passed": true,
+    "error": null,
+    "checks": [
+      [
+        "asked the user a question",
+        true
+      ],
+      [
+        "did not submit for approval",
+        true
+      ]
+    ],
+    "seconds": 4.7,
+    "tool_calls": 1,
+    "tool_errors": 0,
+    "poster_jobs": 0,
+    "turns": [
+      {
+        "campaign_id": "cmp_8d078ffbef",
+        "session_id": "eval-contradictory_dates-1791561155",
+        "reply": "I need to stop and check the dates before creating anything.\n\n**Date check (today is Friday 2026-10-09):**\n- Thursday = 2026-10-15, Friday = 2026-10-16, Saturday = 2026-10-17 → sale runs **Thu 15 Oct to Sat 17 Oct**.\n- The brief asks to email loyalty customers on **Sunday** to say \"the sale is still on\". The next Sunday is **2026-10-18** — that is *after* the sale ends on Saturday 17 Oct. An email on Sunday claiming the sale is still on contradicts the offer period.\n\nBecause a wrong guess here would put a false claim in front of customers, I have not created anything (no posters, no screens, no email).\n\n**Questions (3):**\n1. The sale ends Saturday 17 Oct, but the reminder email is requested for Sunday 18 Oct — after the sale. Should the email instead go **before/on the last day** (e.g. Saturday 17 Oct at 9:00), or is the sale actually running **through Sunday** (i.e. Thursday 15 – Sunday 18 Oct)?\n2. If the sale does run through Sunday, should the in-store screens also play on Sunday, or stay Thursday–Saturday 10:00–16:00 as written?\n3. What should the email say if it must go out after the sale ends (e.g. \"last chance\" wording, or a different offer)? Please give the wording you want, since I won't invent prices or claims.\n\n**Status:** needs your input — nothing created yet.",
+        "verified_by_platform": "Campaign cmp_8d078ffbef: draft\nPosters on screens: 0\nScreen schedules: none\nEmail campaigns: none\nApproval: not requested",
+        "warnings": [],
+        "approval_url": null,
+        "state": {
+          "campaign_id": "cmp_8d078ffbef",
+          "name": "Weekend sale Thursday to Saturday. Show posters on in-store screens Thursday to ",
+          "status": "draft",
+          "created_at": "2026-10-09T18:52:35+03:00",
+          "screen_contents": [],
+          "screen_sequences": [],
+          "screen_schedules": [],
+          "segments": [],
+          "email_designs": [],
+          "email_campaigns": [],
+          "approval": null
+        },
+        "steps": [
+          {
+            "n": 1,
+            "tool": "Campaign_tools__MCP__get_campaign",
+            "input": {
+              "campaign_id": "cmp_8d078ffbef",
+              "tool": "Campaign_tools__MCP__get_campaign"
+            },
+            "is_error": false,
+            "observation": "[{\"response\":[{\"type\":\"text\",\"text\":\"{\\n  \\\"campaign_id\\\": \\\"cmp_8d078ffbef\\\",\\n  \\\"name\\\": \\\"Weekend sale Thursday to Saturday. Show posters on in-store screens Thursday to \\\",\\n  \\\"status\\\": \\\"draft\\\",\\n  \\\"created_at\\\": \\\"2026-10-09T18:52:35+03:00\\\",\\n  \\\"screen_contents\\\": [],\\n  \\\"screen_sequences\\\": [],\\n  \\\"screen_schedules\\\": [],\\n  \\\"segments\\\": [],\\n  \\\"email_designs\\\": [],\\n  \\\"email_campaigns\\\": [],\\n  \\\"approval\\\": null\\n}\"}],\"structuredContent\":{\"campaign_id\":\"cmp_8d078ffbef\",\"name\":\"Weekend sale Thursday to Saturday. Show posters on in-store screens Thursday to \",\"status\":\"draft\",\"created_at\":\"2026-10-09T18:52:35+03:00\",\"screen_contents\":[],\"screen_sequences\":[],\"screen_schedules\":[],\"segments\":[],\"email_designs\":[],\"email_campaigns\":[],\"approval\":null}}]"
+          }
+        ]
+      }
+    ]
+  }
+]
