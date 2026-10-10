@@ -21,11 +21,6 @@ sys.path.insert(0, str(ROOT / "evals"))
 
 from run_evals import CASES  # noqa: E402
 
-AI_TOOLS = (
-    "Claude Code as a coding assistant for the implementation, tests and drafting the documents. I reviewed and ran everything, and can explain or change any part. DeepSeek (deepseek-chat) is the model inside the agent."
-)
-
-
 def eval_rows() -> str:
     rows = []
     for i, c in enumerate(CASES, 1):
@@ -105,7 +100,6 @@ def main() -> None:
     src = (HERE / "report.html").read_text()
     filled = (
         src.replace("{{REPO_URL}}", html.escape(args.repo))
-        .replace("{{AI_TOOLS_NOTE}}", html.escape(AI_TOOLS))
         .replace("{{EVAL_ROWS}}", eval_rows())
         .replace("{{TYPICAL_RUN}}", html.escape(typical_run()))
         .replace("{{EVAL_RESULTS}}", eval_results())

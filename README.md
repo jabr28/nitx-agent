@@ -177,7 +177,3 @@ tests/               35 unit/integration tests (no Docker, no LLM)
 docs/                PDF report and its source, Section 01 answers
 transcripts/         recorded agent runs
 ```
-
-## AI tools used
-
-Claude Code as a coding assistant for the implementation, tests and drafting the documents. I reviewed and ran everything, and can explain or change any part. DeepSeek (deepseek-chat) is the model inside the agent.
